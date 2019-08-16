@@ -3,22 +3,24 @@
 ## Example
 
 ```go
-myServer = end2end.Config{URL: "http://localhost:8080"}
+func TestHappyPath(t *testing.T) {
+    myServer = end2end.Config{URL: "http://localhost:8080"}
 
-var resp User
-end2end.NewRequestTo(myServer)
-    .Create("/users", User{Name: "Ivan"})
-    .Read(&resp)
-    .ExpectStatusCode(http.StatusCreated)
-    .Call(t)
+    var resp User
+    end2end.NewRequestTo(myServer)
+        .Create("/users", User{Name: "Ivan"})
+        .Read(&resp)
+        .ExpectStatusCode(http.StatusCreated)
+        .Call(t)
 
-var actual User
-expected := User{Name: "Ivan", GUID: resp.GUID}
-end2end.NewRequestTo(myServer)
-    .Get("/users/" + resp.GUID)
-    .Assert(&actual, &expected)
-    .ExpectedStatusCode(http.StatusOK)
-    .Call(t)
+    var actual User
+    expected := User{Name: "Ivan", GUID: resp.GUID}
+    end2end.NewRequestTo(myServer)
+        .Get("/users/" + resp.GUID)
+        .Assert(&actual, &expected)
+        .ExpectedStatusCode(http.StatusOK)
+        .Call(t)
+}
 ```
 
 The library has dependency to github.com/stretchr/testify/assert
