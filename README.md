@@ -2,7 +2,7 @@
 
 ## Example
 
-```
+```go
 myServer = end2end.Config{URL: "http://localhost:8080"}
 
 var resp User
