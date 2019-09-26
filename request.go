@@ -3,61 +3,66 @@ package end2end
 import (
 	"bytes"
 	"encoding/json"
+	"gitlab.mailjet.tech/core/go/web"
+	"io/ioutil"
+	"log"
 	"net/http"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
-
-// Config contains basic information about the application
-// that will be tested and user that wil send requests.
-type Config struct {
-	// URL is the base URL of the server, For example: "http://localhost:8080"
-	URL string
-	UserName string
-	Password string
-}
 
 // Requester make a call to server and can assert the returned response with expected one.
 type Requester struct {
-	config             Config
-	httpRequest        *http.Request
-	actualResponse     interface{}
-	expectedResponse   interface{}
-	expectedStatusCode int64
-	method             string
+	url         string
+	httpRequest *http.Request
+	response    interface{}
+	responseStatusCode int
 }
 
-// NewRequestTo create and return a new Requester.
-func NewRequestTo(a Config) Requester {
-	return Requester{config: a}
+// NewRequestToEndpoint create and return a new Requester.
+func NewRequestToEndpoint(url string) Requester {
+	return Requester{url: url}
 }
 
 // Create accept as parameters resource path and payload that you want to send to the server.
 // Create a new http.Request and return the updated Requester.
-func (r Requester) Create(path string, payload interface{}) Requester {
-	b, _ :=json.Marshal(payload)
+func (r Requester) Create(payload interface{}) Requester {
+	b, err :=json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	body := bytes.NewReader(b)
-	req, _ := http.NewRequest(http.MethodPost, r.config.URL +path, body)
-	r.httpRequest = req
+	r.httpRequest, err = http.NewRequest(http.MethodPost, r.url, body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return r
 }
 
 // Update accept as parameters resource path and payload that you want to send to the server.
 // Create a new http.Request and return the updated Requester.
 func (r Requester) Update(path string, payload interface{}) Requester {
-	b, _ :=json.Marshal(payload)
-	body := bytes.NewReader(b)
-	req, _ := http.NewRequest(http.MethodPost, r.config.URL +path, body)
+	b, err :=json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	r.httpRequest = req
+	body := bytes.NewReader(b)
+	r.httpRequest, err = http.NewRequest(http.MethodPut, r.url, body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return r
 }
 
 // Delete accept as parameters resource path to the resource that you want to delete.
 // Create a new http.Request and return the updated Requester.
 func (r Requester) Delete(path string) Requester {
-	req, _ := http.NewRequest(http.MethodPost, r.config.URL +path, nil)
+	req, err := http.NewRequest(http.MethodDelete, r.url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	r.httpRequest = req
 	return r
@@ -65,16 +70,25 @@ func (r Requester) Delete(path string) Requester {
 
 // Get accept as parameters resource path to the resource that you want to get.
 // Create a new http.Request and return the updated Requester.
-func (r Requester) Get(path string) Requester {
-	req, _ := http.NewRequest(http.MethodGet, r.config.URL +path, nil)
+func (r Requester) Get(filters string) Requester {
+	req, err := http.NewRequest(http.MethodGet, r.url + filters, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	r.httpRequest = req
 	return r
 }
 
+func (r Requester) WithBasicAuth(userName, password string) Requester {
+	r.httpRequest.SetBasicAuth(userName, password)
+	return r
+}
+
 // Read accept as parameter a type in which you will store
-func (r Requester) Read(actual interface{}) Requester {
-	r.actualResponse = actual
+func (r Requester) Read(response interface{}, statusCode int) Requester {
+	r.response = response
+	r.responseStatusCode = statusCode
 	return r
 }
 
@@ -92,45 +106,45 @@ func (r Requester) Headers(headers map[string]string) Requester {
 
 // Assert accept as parameters actual and expected response from the server.
 func (r Requester) Assert(actual, expected interface{}) Requester {
-	r.actualResponse = actual
-	r.expectedResponse = expected
+	//r.actualResponse = actual
+	//r.expectedResponse = expected
 	return r
 }
 
 // ExpectStatusCode set the status code that you expect to be returned from the server.
 func (r Requester) ExpectStatusCode(status int64) Requester {
-	r.expectedStatusCode = status
+	//r.expectedStatusCode = status
 	return r
 }
 
 // Call make actual make request to the server and assert the returned response with expected one.
-func (r Requester) Call(t *testing.T) {
-	r.httpRequest.SetBasicAuth(r.config.UserName, r.config.Password)
-
+func (r Requester) Call() {
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 
 	}
 	defer resp.Body.Close()
 
-	if r.actualResponse == nil {
+	if r.response == nil {
 		return
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&r.actualResponse); err != nil {
-		t.Error(err)
-		return
+	if resp.StatusCode != r.responseStatusCode {
+		if _, ok := r.response.(*web.Error); !ok {
+			b, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			log.Printf("expect: %s %s return status code: %d and response type: %T", r.httpRequest.Method, r.httpRequest.URL.String(), r.responseStatusCode, r.response)
+			log.Printf("actual: %s %s return status code: %d and response     : %s", r.httpRequest.Method, r.httpRequest.URL.String(), resp.StatusCode, b)
+			log.Fatal()
+		}
 	}
 
-	if r.expectedResponse == nil {
-		return
-	}
-
-	assert.Equal(t, r.expectedResponse, r.actualResponse)
-
-	if r.expectedStatusCode != 0 {
-		assert.EqualValues(t, r.expectedStatusCode, resp.StatusCode)
+	if err := json.NewDecoder(resp.Body).Decode(&r.response); err != nil {
+		log.Fatal(err)
 	}
 }
 

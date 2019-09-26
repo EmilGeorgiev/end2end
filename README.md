@@ -4,22 +4,39 @@
 
 ```go
 func TestHappyPath(t *testing.T) {
-    myServer = end2end.Config{URL: "http://localhost:8080"}
+    baseURL = "http://localhost:8080"
+    userName = "AK10003"
+    password = "SK10003"
 
-    var resp User
-    end2end.NewRequestTo(myServer)
-        .Create("/users", User{Name: "Ivan"})
-        .Read(&resp)
-        .ExpectStatusCode(http.StatusCreated)
-        .Call(t)
+    newUser := User{
+        Name: "Emil",
+        Address: "London",
+        Age: 31,
+    }
+    var response api.AuditLog
+    end2end.NewRequestToEndpoint(baseURL + "/v1/api/users").
+        Create(newUser).
+        WithBasicAuth(userName, password).
+        Read(&response, http.StatusCreated).
+        Call()
 
-    var actual User
-    expected := User{Name: "Ivan", GUID: resp.GUID}
-    end2end.NewRequestTo(myServer)
-        .Get("/users/" + resp.GUID)
-        .Assert(&actual, &expected)
-        .ExpectedStatusCode(http.StatusOK)
-        .Call(t)
+    var got []User
+    end2end.NewRequestToEndpoint(baseURL + "/v1/api/users").
+        Get("").
+        WithBasicAuth(userName, password).
+        Read(&got, http.StatusOK).
+        Call()
+
+    want := []User{
+        {
+            ID: result.ID,
+            Name: "Emil",
+            Address: "London",
+            Age: 31,
+        },
+    }
+
+    assert.Equal(t, want, got)
 }
 ```
 
