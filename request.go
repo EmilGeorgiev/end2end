@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // Requester make a call to server and can assert the returned response with expected one.
@@ -24,18 +25,14 @@ func NewRequestToEndpoint(url string) Requester {
 
 // Create accept as parameters resource path and payload that you want to send to the server.
 // Create a new http.Request and return the updated Requester.
-func (r Requester) Create(payload interface{}) Requester {
-	b, err :=json.Marshal(payload)
+func (r Requester) Create(jsonPayload string) Requester {
+	req, err := http.NewRequest(http.MethodPost, r.url, strings.NewReader(jsonPayload))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	body := bytes.NewReader(b)
-	r.httpRequest, err = http.NewRequest(http.MethodPost, r.url, body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	r.httpRequest = req
+	
 	return r
 }
 
