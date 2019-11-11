@@ -118,7 +118,7 @@ func (r Requester) ExpectStatusCode(status int64) Requester {
 func (r Requester) Call() {
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
-		t.Fatal(err)
+		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 
