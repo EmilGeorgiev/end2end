@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"testing"
 )
 
 // Requester make a call to server and can assert the returned response with expected one.
@@ -116,7 +115,7 @@ func (r Requester) ExpectStatusCode(status int64) Requester {
 }
 
 // Call make actual make request to the server and assert the returned response with expected one.
-func (r Requester) Call(t *testing.T) {
+func (r Requester) Call() {
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -131,12 +130,12 @@ func (r Requester) Call(t *testing.T) {
 		if _, ok := r.response.(*web.Error); !ok {
 			b, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				t.Fatal(err)
+				log.Fatal(err)
 			}
 
-			t.Errorf("expect: %s %s return status code: %d and response type: %T", r.httpRequest.Method, r.httpRequest.URL.String(), r.responseStatusCode, r.response)
-			t.Errorf("actual: %s %s return status code: %d and response     : %s", r.httpRequest.Method, r.httpRequest.URL.String(), resp.StatusCode, b)
-			t.Fatal()
+			log.Printf("expect: %s %s return status code: %d and response type: %T", r.httpRequest.Method, r.httpRequest.URL.String(), r.responseStatusCode, r.response)
+			log.Printf("actual: %s %s return status code: %d and response     : %s", r.httpRequest.Method, r.httpRequest.URL.String(), resp.StatusCode, b)
+			log.Fatal()
 		}
 	}
 
