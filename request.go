@@ -3,11 +3,12 @@ package end2end
 import (
 	"bytes"
 	"encoding/json"
-	"gitlab.mailjet.tech/core/go/web"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
+
+	"gitlab.mailjet.tech/core/go/web"
 )
 
 // Requester make a call to server and can assert the returned response with expected one.
