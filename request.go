@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"testing"
 
 	"gitlab.mailjet.tech/core/go/web"
 )
@@ -116,10 +117,10 @@ func (r Requester) ExpectStatusCode(status int64) Requester {
 }
 
 // Call make actual make request to the server and assert the returned response with expected one.
-func (r Requester) Call() {
+func (r Requester) Call(t *testing.T) {
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 
@@ -131,17 +132,17 @@ func (r Requester) Call() {
 		if _, ok := r.response.(*web.Error); !ok {
 			b, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				log.Fatal(err)
+				t.Fatal(err)
 			}
 
-			log.Printf("expect: %s %s return status code: %d and response type: %T", r.httpRequest.Method, r.httpRequest.URL.String(), r.responseStatusCode, r.response)
-			log.Printf("actual: %s %s return status code: %d and response     : %s", r.httpRequest.Method, r.httpRequest.URL.String(), resp.StatusCode, b)
-			log.Fatal()
+			t.Errorf("expect: %s %s return status code: %d and response type: %T", r.httpRequest.Method, r.httpRequest.URL.String(), r.responseStatusCode, r.response)
+			t.Errorf("actual: %s %s return status code: %d and response     : %s", r.httpRequest.Method, r.httpRequest.URL.String(), resp.StatusCode, b)
+			t.Fatal()
 		}
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&r.response); err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 }
 
