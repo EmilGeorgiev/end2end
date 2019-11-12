@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-
-	"gitlab.mailjet.tech/core/go/web"
 )
 
 // Requester make a call to server and can assert the returned response with expected one.
@@ -129,16 +127,14 @@ func (r Requester) Call(t *testing.T) {
 	}
 
 	if resp.StatusCode != r.responseStatusCode {
-		if _, ok := r.response.(*web.Error); !ok {
-			b, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			t.Errorf("expect: %s %s return status code: %d and response type: %T", r.httpRequest.Method, r.httpRequest.URL.String(), r.responseStatusCode, r.response)
-			t.Errorf("actual: %s %s return status code: %d and response     : %s", r.httpRequest.Method, r.httpRequest.URL.String(), resp.StatusCode, b)
-			t.Fatal()
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			t.Fatal(err)
 		}
+
+		t.Errorf("expect: %s %s return status code: %d and response type: %T", r.httpRequest.Method, r.httpRequest.URL.String(), r.responseStatusCode, r.response)
+		t.Errorf("actual: %s %s return status code: %d and response     : %s", r.httpRequest.Method, r.httpRequest.URL.String(), resp.StatusCode, b)
+		t.Fatal()
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&r.response); err != nil {
