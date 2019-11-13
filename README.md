@@ -18,14 +18,14 @@ func TestHappyPath(t *testing.T) {
         Create(newUser).
         WithBasicAuth(userName, password).
         Read(&response, http.StatusCreated).
-        Call()
+        Call(t)
 
     var got []User
     end2end.NewRequestToEndpoint(baseURL + "/v1/api/users").
         Get("").
         WithBasicAuth(userName, password).
         Read(&got, http.StatusOK).
-        Call()
+        Call(t)
 
     want := []User{
         {
