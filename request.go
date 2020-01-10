@@ -1,6 +1,7 @@
 package end2end
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -10,38 +11,85 @@ import (
 )
 
 // Requester make a call to server and can assert the returned response with expected one.
-type Request struct {
+type Requester struct {
 	url         string
 	httpRequest *http.Request
 	response    interface{}
 	responseStatusCode int
 }
 
-// Create a new request and return it.
-func NewRequest(method string, url string, body string) Request {
-	req, err := http.NewRequest(method, url, strings.NewReader(body))
+// NewRequestToEndpoint create and return a new Requester.
+func NewRequestToEndpoint(url string) Requester {
+	return Requester{url: url}
+}
+
+// Create accept as parameters resource path and payload that you want to send to the server.
+// Create a new http.Request and return the updated Requester.
+func (r Requester) Create(jsonPayload string) Requester {
+	req, err := http.NewRequest(http.MethodPost, r.url, strings.NewReader(jsonPayload))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return Request{httpRequest: req}
+	r.httpRequest = req
+
+	return r
 }
 
-// WithBasicAuth sets the request's Authorization header to use HTTP
-// Basic Authentication with the provided username and password.
-func (r Request) WithBasicAuth(userName, password string) Request {
+// Update accept as parameters resource path and payload that you want to send to the server.
+// Create a new http.Request and return the updated Requester.
+func (r Requester) Update(path string, payload interface{}) Requester {
+	b, err :=json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body := bytes.NewReader(b)
+	r.httpRequest, err = http.NewRequest(http.MethodPut, r.url, body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return r
+}
+
+// Delete accept as parameters resource path to the resource that you want to delete.
+// Create a new http.Request and return the updated Requester.
+func (r Requester) Delete(path string) Requester {
+	req, err := http.NewRequest(http.MethodDelete, r.url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r.httpRequest = req
+	return r
+}
+
+// Get accept as parameters resource path to the resource that you want to get.
+// Create a new http.Request and return the updated Requester.
+func (r Requester) Get(filters string) Requester {
+	req, err := http.NewRequest(http.MethodGet, r.url + filters, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r.httpRequest = req
+	return r
+}
+
+func (r Requester) WithBasicAuth(userName, password string) Requester {
 	r.httpRequest.SetBasicAuth(userName, password)
 	return r
 }
 
-// WithBearerToken set authentication to the http.Request with bearer token.
-func (r Request) WithBearerToken(token string) Request {
-	r.httpRequest.Header.Add("Bearer", token)
+// Read accept as parameter a type in which you will store
+func (r Requester) Read(response interface{}, statusCode int) Requester {
+	r.response = response
+	r.responseStatusCode = statusCode
 	return r
 }
 
-// Headers adds the key, value pair headers to the http.Request.
-func (r Request) Headers(headers map[string]string) Request {
+func (r Requester) Headers(headers map[string]string) Requester {
 	if r.httpRequest == nil {
 		return r
 	}
@@ -53,15 +101,21 @@ func (r Request) Headers(headers map[string]string) Request {
 	return r
 }
 
-// Expect accept as parameter a response and status code that you expect the server to return
-func (r Request) Expect(response interface{}, statusCode int) Request {
-	r.response = response
-	r.responseStatusCode = statusCode
+// Assert accept as parameters actual and expected response from the server.
+func (r Requester) Assert(actual, expected interface{}) Requester {
+	//r.actualResponse = actual
+	//r.expectedResponse = expected
+	return r
+}
+
+// ExpectStatusCode set the status code that you expect to be returned from the server.
+func (r Requester) ExpectStatusCode(status int64) Requester {
+	//r.expectedStatusCode = status
 	return r
 }
 
 // Call make actual make request to the server and assert the returned response with expected one.
-func (r Request) Call(t *testing.T) {
+func (r Requester) Call(t *testing.T) {
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
 		t.Fatal(err)
@@ -87,5 +141,3 @@ func (r Request) Call(t *testing.T) {
 		t.Fatal(err)
 	}
 }
-
-

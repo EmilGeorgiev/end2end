@@ -1,11 +1,11 @@
-package end2end_test
+package v2_test
 
 import (
 	"net/http"
 	"reflect"
 	"testing"
 
-	"github.com/EmilGeorgiev/end2end"
+	"github.com/EmilGeorgiev/end2end/v2"
 )
 
 type GithubResponse struct {
@@ -16,7 +16,7 @@ type GithubResponse struct {
 func TestRequestWithBasicAuth(t *testing.T) {
 	got := GithubResponse{}
 
-	end2end.NewRequest(http.MethodGet, "https://api.github.com", "").
+	v2.NewRequest(http.MethodGet, "https://api.github.com", "").
 		WithBasicAuth("fooo", "barr").
 		Expect(&got, http.StatusUnauthorized).
 		Call(t)
