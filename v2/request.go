@@ -2,6 +2,7 @@ package v2
 
 import (
 	"encoding/json"
+	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -103,6 +104,16 @@ func (r Request) Call(t *testing.T) {
 			t.Fatal(err)
 		}
 		err = jpeg.Encode(r.response.(io.Writer), img, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return
+	case "image/gif":
+		img, err := gif.Decode(resp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = gif.Encode(r.response.(io.Writer), img, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
