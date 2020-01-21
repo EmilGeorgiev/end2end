@@ -2,6 +2,9 @@ package v2
 
 import (
 	"encoding/json"
+	"image/jpeg"
+	"image/png"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,9 +14,9 @@ import (
 
 // Requester make a call to server and can assert the returned response with expected one.
 type Request struct {
-	url         string
-	httpRequest *http.Request
-	response    interface{}
+	url                string
+	httpRequest        *http.Request
+	response           interface{}
 	responseStatusCode int
 }
 
@@ -83,9 +86,30 @@ func (r Request) Call(t *testing.T) {
 		t.Fatal()
 	}
 
+	switch resp.Header.Get("content-type") {
+	case "image/png":
+		img, err := png.Decode(resp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = png.Encode(r.response.(io.Writer), img)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return
+	case "image/jpeg":
+		img, err := jpeg.Decode(resp.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		err = jpeg.Encode(r.response.(io.Writer), img, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+
 	if err := json.NewDecoder(resp.Body).Decode(&r.response); err != nil {
 		t.Fatal(err)
 	}
 }
-
-
