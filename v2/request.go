@@ -72,7 +72,7 @@ func (r Request) Call(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	if r.response == nil {
+	if r.response == nil && resp.StatusCode == r.responseStatusCode {
 		return
 	}
 

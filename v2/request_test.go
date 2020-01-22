@@ -31,3 +31,10 @@ func TestRequestWithBasicAuth(t *testing.T) {
 		t.Errorf("got     : %#v\n", got)
 	}
 }
+
+func TestRequestWithExpectNil(t *testing.T) {
+	v2.NewRequest(http.MethodGet, "https://api.github.com", "").
+		WithBasicAuth("fooo", "barr").
+		Expect(nil, http.StatusUnauthorized).
+		Call(t)
+}
