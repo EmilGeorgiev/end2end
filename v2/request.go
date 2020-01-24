@@ -57,6 +57,21 @@ func (r Request) Headers(headers map[string]string) Request {
 	return r
 }
 
+// Params adds the key, value pair query to the route.
+func (r Request) Params(params map[string]string) Request {
+	if r.httpRequest == nil {
+		return r
+	}
+
+	q := r.httpRequest.URL.Query()
+	for k, v := range params {
+		q.Set(k , v)
+	}
+
+	r.httpRequest.URL.RawQuery = q.Encode()
+	return r
+}
+
 // Expect accept as parameter a response and status code that you expect the server to return
 func (r Request) Expect(response interface{}, statusCode int) Request {
 	r.response = response
