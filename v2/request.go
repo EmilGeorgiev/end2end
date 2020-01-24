@@ -13,15 +13,13 @@ import (
 	"testing"
 )
 
-// Requester make a call to server and can assert the returned response with expected one.
+// Request make a call to server.
 type Request struct {
 	url                string
 	httpRequest        *http.Request
-	response           interface{}
-	responseStatusCode int
 }
 
-// Create a new request and return it.
+// NewRequest a new request and return it.
 func NewRequest(method string, url string, body string) Request {
 	req, err := http.NewRequest(method, url, strings.NewReader(body))
 	if err != nil {
@@ -72,24 +70,38 @@ func (r Request) Params(params map[string]string) Request {
 	return r
 }
 
-// Expect accept as parameter a response and status code that you expect the server to return
-func (r Request) Expect(response interface{}, statusCode int) Request {
-	r.response = response
-	r.responseStatusCode = statusCode
-	return r
-}
-
-// Call make actual make request to the server and assert the returned response with expected one.
+// Call send a request to the server.
 func (r Request) Call(t *testing.T) {
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	resp.Body.Close()
+}
 
-	if r.responseStatusCode == 0 {
-		return
+// RequestExpectant send request and assert the expected response.
+type RequestExpectant struct {
+	Request
+	response interface{}
+	responseStatusCode int
+}
+
+// Expect accept as parameter a response and status code that you expect to be returned from the server.
+func (r Request) Expect(response interface{}, statusCode int) RequestExpectant {
+	return RequestExpectant{
+		Request: r,
+		response: response,
+		responseStatusCode: statusCode,
 	}
+}
+
+// Call make actual make request to the server and assert the returned response with expected one.
+func (r RequestExpectant) Call(t *testing.T) {
+	resp, err := http.DefaultClient.Do(r.httpRequest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
 
 	if r.response == nil && resp.StatusCode == r.responseStatusCode {
 		return
