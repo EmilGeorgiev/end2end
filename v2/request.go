@@ -87,6 +87,10 @@ func (r Request) Call(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
+	if r.responseStatusCode == 0 {
+		return
+	}
+
 	if r.response == nil && resp.StatusCode == r.responseStatusCode {
 		return
 	}
