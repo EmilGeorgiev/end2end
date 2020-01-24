@@ -12,9 +12,9 @@ import (
 
 // Requester make a call to server and can assert the returned response with expected one.
 type Requester struct {
-	url         string
-	httpRequest *http.Request
-	response    interface{}
+	url                string
+	httpRequest        *http.Request
+	response           interface{}
 	responseStatusCode int
 }
 
@@ -39,7 +39,7 @@ func (r Requester) Create(jsonPayload string) Requester {
 // Update accept as parameters resource path and payload that you want to send to the server.
 // Create a new http.Request and return the updated Requester.
 func (r Requester) Update(path string, payload interface{}) Requester {
-	b, err :=json.Marshal(payload)
+	b, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -68,7 +68,7 @@ func (r Requester) Delete(path string) Requester {
 // Get accept as parameters resource path to the resource that you want to get.
 // Create a new http.Request and return the updated Requester.
 func (r Requester) Get(filters string) Requester {
-	req, err := http.NewRequest(http.MethodGet, r.url + filters, nil)
+	req, err := http.NewRequest(http.MethodGet, r.url+filters, nil)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -38,3 +38,9 @@ func TestRequestWithExpectNil(t *testing.T) {
 		Expect(nil, http.StatusUnauthorized).
 		Call(t)
 }
+
+func TestSendRequestWithoutAssertTheResponse(t *testing.T) {
+	v2.NewRequest(http.MethodGet, "https://api.github.com", "").
+		WithBasicAuth("fooo", "barr").
+		Call(t)
+}
