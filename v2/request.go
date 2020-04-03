@@ -2,6 +2,7 @@ package v2
 
 import (
 	"encoding/json"
+	"fmt"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
@@ -38,7 +39,7 @@ func (r Request) WithBasicAuth(userName, password string) Request {
 
 // WithBearerToken set authentication to the http.Request with bearer token.
 func (r Request) WithBearerToken(token string) Request {
-	r.httpRequest.Header.Add("Bearer", token)
+	r.httpRequest.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	return r
 }
 
