@@ -44,3 +44,18 @@ func TestSendRequestWithoutAssertTheResponse(t *testing.T) {
 		WithBasicAuth("fooo", "barr").
 		Call(t)
 }
+
+func TestSendRequestWithoutCheckStatusCode(t *testing.T) {
+	resp, err := v2.NewRequest(http.MethodGet, "https://api.github.com", "").
+		WithBasicAuth("fooo", "barr").
+		Send()
+	if err != nil {
+		t.Error("unexpected error:", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("expect status code %d:", http.StatusUnauthorized)
+		t.Errorf("got staus code     %d:", resp.StatusCode)
+	}
+}

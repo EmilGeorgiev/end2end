@@ -155,3 +155,7 @@ func (r RequestExpectant) Call(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func (r Request) Send() (*http.Response, error) {
+	return http.DefaultClient.Do(r.httpRequest)
+}
