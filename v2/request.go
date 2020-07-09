@@ -85,7 +85,7 @@ func (r Request) Call(t *testing.T) {
 	Responses <- Response{
 		StatusCode: resp.StatusCode,
 		TimeDuration: duration.Milliseconds(),
-		Endpoint: r.httpRequest.URL.Path,
+		Endpoint: r.httpRequest.Method + " " + r.httpRequest.URL.Path,
 	}
 }
 
@@ -118,7 +118,7 @@ func (r RequestExpectant) Call(t *testing.T) {
 	Responses <- Response{
 		StatusCode: resp.StatusCode,
 		TimeDuration: duration.Milliseconds(),
-		Endpoint: r.httpRequest.URL.Path,
+		Endpoint: r.httpRequest.Method + " " + r.httpRequest.URL.Path,
 	}
 
 	if r.response == nil && resp.StatusCode == r.responseStatusCode {
@@ -182,7 +182,7 @@ func (r Request) Send() (*http.Response, error) {
 	Responses <- Response{
 		StatusCode: resp.StatusCode,
 		TimeDuration: duration.Milliseconds(),
-		Endpoint: r.httpRequest.URL.Path,
+		Endpoint: r.httpRequest.Method + " " + r.httpRequest.URL.Path,
 	}
 
 	return resp, err
