@@ -1,7 +1,5 @@
 package v2
 
-import "time"
-
 var Responses = make(chan Response, 1000)
 var FinishWithCollectOfStatistics = make(chan struct{})
 
@@ -22,7 +20,6 @@ type Metrics struct {
 func (m *Metrics) Collect() {
 	go func() {
 		for  resp := range Responses {
-			time.Sleep(2*time.Second)
 			m.TotalNumberOfSentRequests++
 			m.TotalTimeOfWaitingForResponse += resp.TimeDuration
 
