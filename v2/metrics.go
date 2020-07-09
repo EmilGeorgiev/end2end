@@ -35,5 +35,4 @@ func (m *Metrics) Collect() {
 
 		FinishWithCollectOfStatistics <- struct{}{}
 	}()
-
 }

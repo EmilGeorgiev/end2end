@@ -177,6 +177,9 @@ func (r RequestExpectant) Call(t *testing.T) {
 func (r Request) Send() (*http.Response, error) {
 	start := time.Now()
 	resp, err := http.DefaultClient.Do(r.httpRequest)
+	if err != nil {
+		return resp, err
+	}
 	duration := time.Since(start)
 
 	Responses <- Response{
