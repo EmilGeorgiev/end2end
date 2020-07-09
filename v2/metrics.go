@@ -28,7 +28,7 @@ func (m *Metrics) Collect() {
 				m.MaxTimeForResponse = resp.TimeDuration
 			}
 
-			if m.MinTimeForResponse > resp.TimeDuration {
+			if (m.MinTimeForResponse > resp.TimeDuration) || m.MinTimeForResponse == 0 {
 				m.MinTimeForResponse = resp.TimeDuration
 			}
 		}
