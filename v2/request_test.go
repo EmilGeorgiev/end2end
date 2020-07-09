@@ -1,16 +1,34 @@
 package v2_test
 
 import (
+	"fmt"
+	"github.com/EmilGeorgiev/end2end/v2"
 	"net/http"
+	"os"
 	"reflect"
 	"testing"
-
-	"github.com/EmilGeorgiev/end2end/v2"
 )
 
 type GithubResponse struct {
 	Message          string `json:"message"`
 	DocumentationURL string `json:"documentation_url"`
+}
+
+func TestMain(m *testing.M) {
+	metrics := &v2.Metrics{}
+	metrics.Collect()
+
+	code := m.Run()
+
+	close(v2.Responses)
+	<- v2.FinishWithCollectOfStatistics
+	fmt.Printf("Total number of sending requests: %d \n", metrics.TotalNumberOfSentRequests)
+	fmt.Printf("Total time for waiting response : %d ms\n", metrics.TotalTimeOfWaitingForResponse)
+	fmt.Printf("Max time for response           : %d ms in request to %s\n", metrics.MaxTimeForResponse, metrics.EndpointWithTheSlowestResponse)
+	fmt.Printf("Min time for response           : %d ms\n", metrics.MinTimeForResponse)
+	fmt.Printf("Average time for response       : %f ms\n", float64(metrics.TotalTimeOfWaitingForResponse)/float64(metrics.TotalNumberOfSentRequests))
+
+	os.Exit(code)
 }
 
 func TestRequestWithBasicAuth(t *testing.T) {

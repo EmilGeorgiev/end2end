@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Request make a call to server.
@@ -73,11 +74,19 @@ func (r Request) Params(params map[string]string) Request {
 
 // Call send a request to the server.
 func (r Request) Call(t *testing.T) {
+	start := time.Now()
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
-	resp.Body.Close()
+	duration := time.Since(start)
+	defer resp.Body.Close()
+
+	Responses <- Response{
+		StatusCode: resp.StatusCode,
+		TimeDuration: duration.Milliseconds(),
+		Endpoint: r.httpRequest.URL.Path,
+	}
 }
 
 // RequestExpectant send request and assert the expected response.
@@ -98,11 +107,19 @@ func (r Request) Expect(response interface{}, statusCode int) RequestExpectant {
 
 // Call make actual make request to the server and assert the returned response with expected one.
 func (r RequestExpectant) Call(t *testing.T) {
+	start := time.Now()
 	resp, err := http.DefaultClient.Do(r.httpRequest)
 	if err != nil {
 		t.Fatal(err)
 	}
+	duration := time.Since(start)
 	defer resp.Body.Close()
+
+	Responses <- Response{
+		StatusCode: resp.StatusCode,
+		TimeDuration: duration.Milliseconds(),
+		Endpoint: r.httpRequest.URL.Path,
+	}
 
 	if r.response == nil && resp.StatusCode == r.responseStatusCode {
 		return
@@ -158,5 +175,15 @@ func (r RequestExpectant) Call(t *testing.T) {
 }
 
 func (r Request) Send() (*http.Response, error) {
-	return http.DefaultClient.Do(r.httpRequest)
+	start := time.Now()
+	resp, err := http.DefaultClient.Do(r.httpRequest)
+	duration := time.Since(start)
+
+	Responses <- Response{
+		StatusCode: resp.StatusCode,
+		TimeDuration: duration.Milliseconds(),
+		Endpoint: r.httpRequest.URL.Path,
+	}
+
+	return resp, err
 }
